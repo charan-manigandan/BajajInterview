@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %} {% endblock %}
+
+{% block content %}
+<div class="mt-4">
+    <form id="data-form">
+        <div class="mb-3">
+            <label for="data-input" class="form-label">JSON Input</label>
+            <textarea class="form-control" id="data-input" rows="3" placeholder='{"data": ["A","1","C","2"]}'></textarea>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="submitData()">Submit</button>
+    </form>
+</div>
+<div id="filters" class="mt-4" style="display: none;">
+    <h3>Multi Filter</h3>
+    <div class="mb-3">
+        <label for="multi-filter" class="form-label">Select Filters</label>
+        <select id="multi-filter" class="form-select" multiple>
+            <option value="numbers">Numbers</option>
+            <option value="alphabets">Alphabets</option>
+            <option value="highest-alphabet">Highest Alphabet</option>
+        </select>
+    </div>
+    <button type="button" class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+</div>
+<div id="response" class="mt-4" style="display: none;">
+    <h3>Filtered Response</h3>
+    <p id="numbers"></p>
+    <p id="highest-alphabet"></p>
+</div>
+
+<script>
+    function submitData() {
+        const dataInput = document.getElementById('data-input').value;
+        try {
+            const data = JSON.parse(dataInput);
+            fetch('/api/bfhl/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+                window.apiResponse = data;
+                document.getElementById('filters').style.display = 'block';
+            })
+            .catch(error => console.error('Error:', error));
+        } catch (e) {
+            alert('Invalid JSON input.');
+        }
+    }
+
+    function applyFilters() {
+        const selectedOptions = Array.from(document.getElementById('multi-filter').selectedOptions).map(opt => opt.value);
+        const response = window.apiResponse;
+        document.getElementById('response').style.display = 'block';
+
+        if (selectedOptions.includes('numbers')) {
+            document.getElementById('numbers').innerText = 'Numbers: ' + response.numbers.join(', ');
+        } else {
+            document.getElementById('numbers').innerText = '';
+        }
+
+        if (selectedOptions.includes('highest-alphabet')) {
+            const highestAlphabet = response.alphabets.sort()[response.alphabets.length - 1];
+            document.getElementById('highest-alphabet').innerText = 'Highest Alphabet: ' + highestAlphabet;
+        } else {
+            document.getElementById('highest-alphabet').innerText = '';
+        }
+    }
+</script>
+{% endblock %}
